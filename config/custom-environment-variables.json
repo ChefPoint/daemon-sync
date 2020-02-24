@@ -1,0 +1,11 @@
+{
+  "database": {
+    "connection-string": "database_connectionString"
+  },
+  "auth": {
+    "squareAPI": "auth_squareAPI"
+  },
+  "settings": {
+    "print-item-id": "settings_printItemID"
+  }
+}

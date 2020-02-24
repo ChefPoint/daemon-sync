@@ -1,0 +1,13 @@
+{
+  "title": "CHEF POINT Sync - Dev",
+  "database": {
+    "connection-string": "mongodb://localhost/chefpoint-connect"
+  },
+  "auth": {
+    "squareAPI": "none-available"
+  },
+  "settings": {
+    "default-tax-id": "INT",
+    "print-item-id": "HCZZFNCELJBPG4ISBCT7DZXS"
+  }
+}

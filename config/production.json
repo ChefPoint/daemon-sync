@@ -1,0 +1,9 @@
+{
+  "title": "CHEF POINT Sync",
+  "database": {
+    "connection-string": "env-var"
+  },
+  "auth": {
+    "squareAPI": "env-var"
+  }
+}
