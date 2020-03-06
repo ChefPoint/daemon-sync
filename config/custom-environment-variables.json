@@ -3,9 +3,8 @@
     "connection-string": "database_connectionString"
   },
   "auth": {
-    "squareAPI": "auth_squareAPI"
-  },
-  "settings": {
-    "print-item-id": "settings_printItemID"
+    "squareAPI": "auth_squareAPI",
+    "google-service-account-email": "auth_googleServiceAccountEmail",
+    "google-service-account-private-key": "auth_googleServiceAccountPrivateKey"
   }
 }

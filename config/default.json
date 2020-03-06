@@ -1,13 +1,40 @@
 {
-  "title": "CHEF POINT Sync - Dev",
+  "title": "CHEF POINT Daemon - Sync (Dev)",
   "database": {
     "connection-string": "mongodb://localhost/chefpoint-connect"
   },
   "auth": {
-    "squareAPI": "none-available"
+    "squareAPI": "env-var",
+    "google-service-account-email": "env-var",
+    "google-service-account-private-key": "env-var"
   },
   "settings": {
     "default-tax-id": "INT",
     "print-item-id": "HCZZFNCELJBPG4ISBCT7DZXS"
+  },
+  "menuTP": {
+    "spreadsheet-id": "1S7_KDr9jhVMhnjew9AmnDf1k2VJeszloJDjAjqe22gs",
+    "items": [
+      {
+        "key": "Soup",
+        "title": "Sopa do Dia",
+        "reference": "S6BY3YPZUVWC3OPXN3HPKFKN"
+      },
+      {
+        "key": "Fruit",
+        "title": "Fruta do Dia",
+        "reference": "QHEB7B2KAKVP23ATWUXBJBUS"
+      },
+      {
+        "key": "Bread",
+        "title": "Pão do Dia",
+        "reference": "7MT3CDUUED7527DFAGW2IN5B"
+      },
+      {
+        "key": "Salad",
+        "title": "Salada do Dia",
+        "reference": "XPEMHB7ULDIHYUINRJ24YOIZ"
+      }
+    ]
   }
 }

@@ -18,6 +18,11 @@ exports.Store = mongoose.model(
       maxlength: 30,
       required: true
     },
+    shortName: {
+      type: String,
+      maxlength: 30,
+      required: true
+    },
     squareLocationID: {
       type: String,
       maxlength: 30,

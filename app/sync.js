@@ -61,7 +61,8 @@ const syncStoreTransactions = async store => {
     }
 
     // Format and save it to the database
-    await syncAPI.formatOrderIntoTransaction(order);
+    await syncAPI.formatOrderIntoTransaction(order, store.name);
+
     // and check if it's date is more recent than this store's last sync time.
     store.lastSyncTime = syncAPI.compareSyncDates(
       order.closed_at,

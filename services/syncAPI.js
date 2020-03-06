@@ -7,9 +7,12 @@
 
 /* * */
 /* IMPORTS */
+const _ = require("lodash");
 const config = require("config");
 const logger = require("./logger");
+const moment = require("moment");
 const squareAPI = require("../services/squareAPI");
+const spreadsheetAPI = require("../services/spreadsheetAPI");
 const { Transaction } = require("../models/Transaction");
 
 /* * */
@@ -46,34 +49,66 @@ exports.getOrdersFromSquare = async (squareLocationID, lastSyncTime) => {
 /* This function formats an order from Square into the Transaction model. */
 /* For this to happen, it is necessary to extract the payment methods, */
 /* the line items purchased and the customer details, if there are any.  */
-exports.formatOrderIntoTransaction = async order => {
-  // Get order items
+exports.formatOrderIntoTransaction = async (order, storeShortName) => {
+  // Get Order Items
   // NOTE: This must be outside the Transaction declaration
   // because the print flag in the POS is an item just like any other.
   // If present, this item must be extracted from the order's line_items
   // and the print flag must be set to true.
   const lineItems = getOrderItems(order.line_items);
 
-  // Initiate a new instance of Transaction
-  // and format order details according to object model
-  await new Transaction({
-    // Order ID is the same for debugging purposes
-    order_id: order.id,
-    // Location ID is the same for debugging purposes
-    location_id: order.location_id,
-    // The moment in time the order was paid
-    closed_at: order.closed_at,
-    // Check if order has associated customer details
-    customer: await getOrderCustomer(order.tenders),
-    // Get order payment methods
-    payment_methods: getOrderPaymentMethods(order.tenders),
-    // Format order items
-    line_items: lineItems.items,
-    // Check if document is to be printed or not
-    should_print: lineItems.printFlag
-  })
-    // Save the transaction to the database
-    .save();
+  // Get Order Customer
+  // NOTE: This must be outside the Transaction declaration
+  // because the order might contain special MenuTP items.
+  // Since those items are published to the special MenuTP spreadsheet,
+  // and since they must contain the customer TP Badge ID, then the customer
+  // details must be retrieved in advance.
+  const customerDetails = await getOrderCustomer(order.tenders);
+
+  // lineItems.menuTPItems
+  // If lineItems.menuTPItems contains objects,
+  // then publish them to the MenuTP spreadsheet.
+  if (!_.isEmpty(lineItems.menuTPItems)) {
+    // Send items to the MenuTP spreadsheet
+    await spreadsheetAPI.addNewRow({
+      // The shop location
+      Location: storeShortName,
+      // The transaction date formated so GSheets understands
+      Date: moment(order.closed_at).format("[=DATE(]YYYY[,]MM[,]DD[)]"),
+      // The transaction time formated so GSheets understands
+      Time: moment(order.closed_at).format("[=TIME(]HH[,]mm[,0)]"),
+      // The customer TP Badge ID
+      BadgeID: customerDetails ? customerDetails.name : "not-available",
+      // The items themselves
+      ...lineItems.menuTPItems
+    });
+  }
+
+  // lineItems.items.lenght
+  // Only create a transaction if the order contains items.
+  // Otherwise the process module will not accept an empty transaction.
+  if (lineItems.items.length) {
+    // Initiate a new instance of Transaction
+    // and format order details according to object model
+    await new Transaction({
+      // Order ID is the same for debugging purposes
+      order_id: order.id,
+      // Location ID is the same for debugging purposes
+      location_id: order.location_id,
+      // The moment in time the order was paid
+      closed_at: order.closed_at,
+      // Check if order has associated customer details
+      customer: customerDetails,
+      // Get order payment methods
+      payment_methods: getOrderPaymentMethods(order.tenders),
+      // Format order items
+      line_items: lineItems.items,
+      // Check if document is to be printed or not
+      should_print: lineItems.printFlag
+    })
+      // Save the transaction to the database
+      .save();
+  }
 };
 
 /* * */
@@ -111,13 +146,16 @@ const getOrderPaymentMethods = tenders => {
 /* * and since the Square API defines an array of "taxes" */
 /* * possible for each line item, only the array's first value will be used. */
 const getOrderItems = lineItems => {
-  // Initiate temporary items storage array
-  var items = [];
   // Initiate temporary print flag
-  var printFlag = false;
+  let printFlag = false;
+  // Initiate temporary MenuTP items
+  let menuTPItems = {};
+  // Initiate temporary items storage array
+  let items = [];
 
   // For each line item
   for (const item of lineItems) {
+    // A.
     // Check if it is a print instruction
     if (item.catalog_object_id === config.get("settings.print-item-id")) {
       // If it is, set the flag
@@ -126,6 +164,25 @@ const getOrderItems = lineItems => {
       continue;
     }
 
+    // B.
+    // Check if it is a special MenuTP item
+    let skipItemCreation = false;
+    for (const tp of config.get("menuTP.items")) {
+      if (item.catalog_object_id === tp.reference) {
+        // If it is, set its key and quantity
+        if (menuTPItems[tp.key]) menuTPItems[tp.key] += Number(item.quantity);
+        else menuTPItems[tp.key] = Number(item.quantity);
+        // and skip item creation
+        skipItemCreation = true;
+        break;
+      }
+    }
+    // Skip item creation if item is part of the special MenuTP items
+    // (this declaration must be outside of the above (for of menuTPItems) loop
+    //  because it is it's parent loop that must be skipped)
+    if (skipItemCreation) continue;
+
+    // C.
     // If it is a normal item,
     // format it and save it to the array
     items.push({
@@ -153,7 +210,7 @@ const getOrderItems = lineItems => {
   }
   // Return formated items array to the caller,
   // as well as the print flag, wrapped in a new object
-  return { items: items, printFlag: printFlag };
+  return { printFlag: printFlag, menuTPItems, items: items };
 };
 
 /* * */

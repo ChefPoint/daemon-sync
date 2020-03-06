@@ -1,9 +1,11 @@
 {
-  "title": "CHEF POINT Sync",
+  "title": "CHEF POINT Daemon - Sync",
   "database": {
     "connection-string": "env-var"
   },
   "auth": {
-    "squareAPI": "env-var"
+    "squareAPI": "env-var",
+    "google-service-account-email": "env-var",
+    "google-service-account-private-key": "env-var"
   }
 }
