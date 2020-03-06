@@ -37,8 +37,8 @@ module.exports = async () => {
 /* First, orders are retrieved from Square, formated into transactions */
 /* and saved to the database. */
 /* Second, for the most recent transaction, it's closed_at date value */
-/* is saved as the lastSyncTime value for the store.  */
-/* This is what keeps track of which transactions were synced which were not.  */
+/* is saved as the lastSyncTime value for the store. */
+/* This is what keeps track of which transactions were synced which were not. */
 const syncStoreTransactions = async store => {
   // First, get orders from Square
   const orders = await syncAPI.getOrdersFromSquare(
