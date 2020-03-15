@@ -236,7 +236,7 @@ const getOrderItems = lineItems => {
 
     // Skip item creation
     // This declaration must be outside of the above for loops
-    // because it the main "order.items" loop that must be skipped.
+    // because it is the main "order.lineItems" loop that must be skipped.
     if (skipItemCreation) continue;
 
     // D.
