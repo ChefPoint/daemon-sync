@@ -70,24 +70,57 @@ exports.formatOrderIntoTransaction = async (order, storeShortName) => {
   // then publish them to the MenuTP spreadsheet.
   if (!_.isEmpty(lineItems.menuTPItems)) {
     // Send items to the MenuTP spreadsheet
-    await spreadsheetAPI.addNewRow({
-      // The shop location
-      Location: storeShortName,
-      // The transaction date formated so GSheets understands
-      Date: moment(order.closed_at).format("[=DATE(]YYYY[,]MM[,]DD[)]"),
-      // The transaction time formated so GSheets understands
-      Time: moment(order.closed_at).format("[=TIME(]HH[,]mm[,0)]"),
-      // The customer TP Badge ID
-      BadgeID: customerDetails ? customerDetails.name : "not-available",
-      // The items themselves
-      ...lineItems.menuTPItems
-    });
+    await spreadsheetAPI.addNewRow(
+      config.get("menuTP.document-id"),
+      config.get("menuTP.sheet-id"),
+      {
+        // The shop location
+        Location: storeShortName,
+        // The transaction date formated so GSheets understands
+        Date: moment(order.closed_at).format("[=DATE(]YYYY[,]MM[,]DD[)]"),
+        // The transaction time formated so GSheets understands
+        Time: moment(order.closed_at).format("[=TIME(]HH[,]mm[,0)]"),
+        // The customer TP Badge ID
+        BadgeID: customerDetails ? customerDetails.name : "not-available",
+        // The items themselves
+        ...lineItems.menuTPItems
+      }
+    );
   }
 
-  // lineItems.items.lenght
-  // Only create a transaction if the order contains items.
-  // Otherwise the process module will not accept an empty transaction.
-  if (lineItems.items.length) {
+  // lineItems.reservationItems
+  // If lineItems.reservationItems contains objects,
+  // then publish them to the Reservations spreadsheet.
+  if (!_.isEmpty(lineItems.reservationItems)) {
+    // Send items to the Reservations spreadsheet
+    await spreadsheetAPI.addNewRow(
+      config.get("reservations.document-id"),
+      config.get("reservations.sheet-id"),
+      {
+        // The shop location
+        orderID: order.id,
+        // The shop location
+        location: storeShortName,
+        // The customer TP Badge ID
+        customerName: customerDetails ? customerDetails.name : "not-available",
+        // The reservation (transaction) date formated so GSheets understands
+        reservationDate: moment(order.closed_at).format(
+          "[=DATE(]YYYY[,]MM[,]DD[)]"
+        ),
+        // The pickup date formated so GSheets understands
+        pickupDate: moment(order.closed_at)
+          .add(1, "day")
+          .format("[=DATE(]YYYY[,]MM[,]DD[)]"),
+        // The items themselves
+        ...lineItems.reservationItems
+      }
+    );
+  }
+
+  // lineItems.invoicedItems.lenght
+  // Only create a transaction if the order contains items to be invoiced.
+  // Otherwise the process module throws an error because it can't accept empty transactions.
+  if (lineItems.invoicedItems.length) {
     // Initiate a new instance of Transaction
     // and format order details according to object model
     await new Transaction({
@@ -102,7 +135,7 @@ exports.formatOrderIntoTransaction = async (order, storeShortName) => {
       // Get order payment methods
       payment_methods: getOrderPaymentMethods(order.tenders),
       // Format order items
-      line_items: lineItems.items,
+      line_items: lineItems.invoicedItems,
       // Check if document is to be printed or not
       should_print: lineItems.printFlag
     })
@@ -136,6 +169,12 @@ const getOrderPaymentMethods = tenders => {
 /* * That item, if present, must be read and removed from the transaction */
 /* * and it's presence must set the should_print flag to true, */
 /* * so that at process time the invoice ID can be saved to the print queue. */
+/* NOTE about menuTPItems: */
+/* * --------Explanation needed!--------- */
+/* * --------Explanation needed!--------- */
+/* NOTE about reservationItems: */
+/* * --------Explanation needed!--------- */
+/* * --------Explanation needed!--------- */
 /* NOTE about gross_price being divided by 100: */
 /* * In Vendus, price is of type "float", */
 /* * while in Square, price is of type "Integer", */
@@ -146,27 +185,32 @@ const getOrderPaymentMethods = tenders => {
 /* * and since the Square API defines an array of "taxes" */
 /* * possible for each line item, only the array's first value will be used. */
 const getOrderItems = lineItems => {
-  // Initiate temporary print flag
+  // Initiate temporary Print flag
   let printFlag = false;
-  // Initiate temporary MenuTP items
+  // Initiate temporary MenuTP items object
   let menuTPItems = {};
-  // Initiate temporary items storage array
-  let items = [];
+  // Initiate temporary Reservation items
+  let reservationItems = {};
+  // Initiate temporary Invoiced items storage array
+  let invoicedItems = [];
 
   // For each line item
   for (const item of lineItems) {
+    // Initiate Skip item creation variable
+    // Explanation needed!
+    let skipItemCreation = false;
+
     // A.
     // Check if it is a print instruction
-    if (item.catalog_object_id === config.get("settings.print-item-id")) {
+    if (item.catalog_object_id === config.get("general.print-item-id")) {
       // If it is, set the flag
       printFlag = true;
       // and skip item creation
-      continue;
+      skipItemCreation = true;
     }
 
     // B.
     // Check if it is a special MenuTP item
-    let skipItemCreation = false;
     for (const tp of config.get("menuTP.items")) {
       if (item.catalog_object_id === tp.reference) {
         // If it is, set its key and quantity
@@ -177,15 +221,28 @@ const getOrderItems = lineItems => {
         break;
       }
     }
-    // Skip item creation if item is part of the special MenuTP items
-    // (this declaration must be outside of the above (for of menuTPItems) loop
-    //  because it is it's parent loop that must be skipped)
-    if (skipItemCreation) continue;
 
     // C.
-    // If it is a normal item,
-    // format it and save it to the array
-    items.push({
+    // Check if it is a reservation
+    for (const rv of config.get("reservations.items")) {
+      if (item.catalog_object_id === rv.reference) {
+        // If it is, set its key and quantity
+        if (reservationItems[rv.key])
+          reservationItems[rv.key] += Number(item.quantity);
+        else reservationItems[rv.key] = Number(item.quantity);
+        break;
+      }
+    }
+
+    // Skip item creation
+    // This declaration must be outside of the above for loops
+    // because it the main "order.items" loop that must be skipped.
+    if (skipItemCreation) continue;
+
+    // D.
+    // If item creation should not be skipped,
+    // format the item and save it to the array
+    invoicedItems.push({
       reference:
         // Reference for debugging purposes
         item.catalog_object_id || "none-available",
@@ -210,7 +267,7 @@ const getOrderItems = lineItems => {
   }
   // Return formated items array to the caller,
   // as well as the print flag, wrapped in a new object
-  return { printFlag: printFlag, menuTPItems, items: items };
+  return { printFlag, menuTPItems, reservationItems, invoicedItems };
 };
 
 /* * */
@@ -226,7 +283,7 @@ const getTaxTier = taxPercentage => {
       return "NOR";
 
     default:
-      return config.get("settings.default-tax-id");
+      return config.get("general.default-tax-id");
   }
 };
 
