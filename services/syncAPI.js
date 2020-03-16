@@ -70,22 +70,26 @@ exports.formatOrderIntoTransaction = async (order, storeShortName) => {
   // then publish them to the MenuTP spreadsheet.
   if (!_.isEmpty(lineItems.menuTPItems)) {
     // Send items to the MenuTP spreadsheet
-    await spreadsheetAPI.addNewRow(
-      config.get("menuTP.document-id"),
-      config.get("menuTP.sheet-id"),
-      {
-        // The shop location
-        Location: storeShortName,
-        // The transaction date formated so GSheets understands
-        Date: moment(order.closed_at).format("[=DATE(]YYYY[,]MM[,]DD[)]"),
-        // The transaction time formated so GSheets understands
-        Time: moment(order.closed_at).format("[=TIME(]HH[,]mm[,0)]"),
-        // The customer TP Badge ID
-        BadgeID: customerDetails ? customerDetails.name : "not-available",
-        // The items themselves
-        ...lineItems.menuTPItems
-      }
-    );
+    try {
+      await spreadsheetAPI.addNewRow(
+        config.get("menuTP.document-id"),
+        config.get("menuTP.sheet-id"),
+        {
+          // The shop location
+          Location: storeShortName,
+          // The transaction date formated so GSheets understands
+          Date: moment(order.closed_at).format("[=DATE(]YYYY[,]MM[,]DD[)]"),
+          // The transaction time formated so GSheets understands
+          Time: moment(order.closed_at).format("[=TIME(]HH[,]mm[,0)]"),
+          // The customer TP Badge ID
+          BadgeID: customerDetails ? customerDetails.name : "not-available",
+          // The items themselves
+          ...lineItems.menuTPItems
+        }
+      );
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   // lineItems.reservationItems
@@ -93,28 +97,34 @@ exports.formatOrderIntoTransaction = async (order, storeShortName) => {
   // then publish them to the Reservations spreadsheet.
   if (!_.isEmpty(lineItems.reservationItems)) {
     // Send items to the Reservations spreadsheet
-    await spreadsheetAPI.addNewRow(
-      config.get("reservations.document-id"),
-      config.get("reservations.sheet-id"),
-      {
-        // The shop location
-        orderID: order.id,
-        // The shop location
-        location: storeShortName,
-        // The customer TP Badge ID
-        customerName: customerDetails ? customerDetails.name : "not-available",
-        // The reservation (transaction) date formated so GSheets understands
-        reservationDate: moment(order.closed_at).format(
-          "[=DATE(]YYYY[,]MM[,]DD[)]"
-        ),
-        // The pickup date formated so GSheets understands
-        pickupDate: moment(order.closed_at)
-          .add(1, "day")
-          .format("[=DATE(]YYYY[,]MM[,]DD[)]"),
-        // The items themselves
-        ...lineItems.reservationItems
-      }
-    );
+    try {
+      await spreadsheetAPI.addNewRow(
+        config.get("reservations.document-id"),
+        config.get("reservations.sheet-id"),
+        {
+          // The shop location
+          orderID: order.id,
+          // The shop location
+          location: storeShortName,
+          // The customer TP Badge ID
+          customerName: customerDetails
+            ? customerDetails.name
+            : "not-available",
+          // The reservation (transaction) date formated so GSheets understands
+          reservationDate: moment(order.closed_at).format(
+            "[=DATE(]YYYY[,]MM[,]DD[)]"
+          ),
+          // The pickup date formated so GSheets understands
+          pickupDate: moment(order.closed_at)
+            .add(1, "day")
+            .format("[=DATE(]YYYY[,]MM[,]DD[)]"),
+          // The items themselves
+          ...lineItems.reservationItems
+        }
+      );
+    } catch (err) {
+      console.log(err);
+    }
   }
 
   // lineItems.invoicedItems.lenght
