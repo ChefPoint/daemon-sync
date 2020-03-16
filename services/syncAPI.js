@@ -72,7 +72,7 @@ exports.formatOrderIntoTransaction = async (order, storeShortName) => {
     // Send items to the MenuTP spreadsheet
     try {
       console.log("Waiting...");
-      await setTimeout(() => console.log("Waited 3 seconds."), 3000);
+      await setTimeout(() => console.log("Waited 5 seconds."), 5000);
       await spreadsheetAPI.addNewRow(
         config.get("menuTP.document-id"),
         config.get("menuTP.sheet-id"),
