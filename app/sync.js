@@ -68,10 +68,10 @@ const syncStoreTransactions = async store => {
       order.closed_at,
       store.lastSyncTime
     );
-  }
 
-  // Update store location with the latest time orders were synced.
-  await store.set({ lastSyncTime: store.lastSyncTime }).save();
+    // Update store location with the latest time orders were synced.
+    await store.set({ lastSyncTime: store.lastSyncTime }).save();
+  }
 
   // Log successful operation.
   logger.info("Done. " + orders.length + " orders synced.");
