@@ -49,7 +49,7 @@ exports.getOrdersFromSquare = async (squareLocationID, lastSyncTime) => {
 /* This function formats an order from Square into the Transaction model. */
 /* For this to happen, it is necessary to extract the payment methods, */
 /* the line items purchased and the customer details, if there are any.  */
-exports.formatOrderIntoTransaction = async (order, storeShortName) => {
+exports.formatOrderIntoTransaction = async (order, store) => {
   // Get Order Items
   // NOTE: This must be outside the Transaction declaration
   // because the print flag in the POS is an item just like any other.
@@ -76,7 +76,7 @@ exports.formatOrderIntoTransaction = async (order, storeShortName) => {
         config.get("menuTP.sheet-id"),
         {
           // The shop location
-          Location: storeShortName,
+          Location: store.shortName,
           // The transaction date formated so GSheets understands
           Date: moment(order.closed_at).format("[=DATE(]YYYY[,]MM[,]DD[)]"),
           // The transaction time formated so GSheets understands
@@ -102,10 +102,10 @@ exports.formatOrderIntoTransaction = async (order, storeShortName) => {
         config.get("reservations.document-id"),
         config.get("reservations.sheet-id"),
         {
-          // The shop location
+          // The order ID
           orderID: order.id,
           // The shop location
-          location: storeShortName,
+          location: store.shortName,
           // The customer TP Badge ID
           customerName: customerDetails
             ? customerDetails.name
@@ -136,16 +136,20 @@ exports.formatOrderIntoTransaction = async (order, storeShortName) => {
     await new Transaction({
       // Order ID is the same for debugging purposes
       order_id: order.id,
-      // Location ID is the same for debugging purposes
-      location_id: order.location_id,
+      // Location name for debugging purposes
+      locationShortName: store.shortName,
+      // Location squareLocationID is the same for debugging purposes
+      squareLocationID: order.location_id,
+      // Location vendusRegisterID for dameon-proccess independence
+      vendusRegisterID: store.vendusRegisterID,
       // The moment in time the order was paid
       closed_at: order.closed_at,
-      // Check if order has associated customer details
-      customer: customerDetails,
       // Get order payment methods
       payment_methods: getOrderPaymentMethods(order.tenders),
       // Format order items
       line_items: lineItems.invoicedItems,
+      // Check if order has associated customer details
+      customer: customerDetails,
       // Check if document is to be printed or not
       should_print: lineItems.printFlag
     })
