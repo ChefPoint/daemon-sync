@@ -22,8 +22,10 @@ module.exports = async () => {
 
   // For each store, sync it's transactions
   for (const store of stores) {
+    logger.info("---------------------------------------------------------");
     logger.info("Syncing orders for [" + store.name + "]...");
     await syncStoreTransactions(store);
+    logger.info("---------------------------------------------------------");
   }
 
   // Disconnect from the database after program completion
