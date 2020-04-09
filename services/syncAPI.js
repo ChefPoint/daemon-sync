@@ -25,17 +25,17 @@ exports.getOrdersFromSquare = async (squareLocationID, lastSyncTime) => {
     method: "POST",
     url: squareAPI.setAPIEndpoint("orders/search"),
     headers: squareAPI.setRequestHeaders(),
-    body: squareAPI.setRequestBody(squareLocationID, lastSyncTime)
+    body: squareAPI.setRequestBody(squareLocationID, lastSyncTime),
   };
 
   // Perform the request to the Square API
   // and return response to the caller
   return await squareAPI
     .requestSquareAPI(params, "orders")
-    .then(orders => {
+    .then((orders) => {
       return orders;
     })
-    .catch(error => {
+    .catch((error) => {
       return logger.error(
         "syncAPI.getOrdersFromSquare()",
         "An error occured while getting orders from Square.",
@@ -50,24 +50,38 @@ exports.getOrdersFromSquare = async (squareLocationID, lastSyncTime) => {
 /* For this to happen, it is necessary to extract the payment methods, */
 /* the line items purchased and the customer details, if there are any.  */
 exports.formatOrderIntoTransaction = async (order, store) => {
-  // Get Order Items
-  // NOTE: This must be outside the Transaction declaration
-  // because the print flag in the POS is an item just like any other.
-  // If present, this item must be extracted from the order's line_items
-  // and the print flag must be set to true.
+  /* * getOrderItems()
+   * This must be outside the Transaction declaration
+   * because the print flag in the POS is an item just like any other.
+   * If present, this item must be extracted from the order's line_items
+   * and the print flag must be set to true.
+   */
   const lineItems = getOrderItems(order.line_items);
 
-  // Get Order Customer
-  // NOTE: This must be outside the Transaction declaration
-  // because the order might contain special MenuTP items.
-  // Since those items are published to the special MenuTP spreadsheet,
-  // and since they must contain the customer TP Badge ID, then the customer
-  // details must be retrieved in advance.
+  /* * getOrderCustomer()
+   * This must be outside the Transaction declaration
+   * because the order might contain special MenuTP items.
+   * Since those items are published to the special MenuTP spreadsheet,
+   * and since they must contain the customer TP Badge ID, then the customer
+   * details must be retrieved in advance.
+   */
   const customerDetails = await getOrderCustomer(order.tenders);
 
-  // lineItems.menuTPItems
-  // If lineItems.menuTPItems contains objects,
-  // then publish them to the MenuTP spreadsheet.
+  /* * getOrderPaymentMethods()
+   * This must be outside the Transaction declaration
+   * because the order might contain special MenuTP items.
+   * Since those items are published to the special MenuTP spreadsheet,
+   * and since they must contain the customer TP Badge ID, then the customer
+   * details must be retrieved in advance.
+   */
+  const paymentMethods = getOrderPaymentMethods(order.tenders);
+
+  //
+
+  /* * lineItems.menuTPItems
+   * If lineItems.menuTPItems contains objects,
+   * then publish them to the MenuTP spreadsheet.
+   */
   if (!_.isEmpty(lineItems.menuTPItems)) {
     // Send items to the MenuTP spreadsheet
     try {
@@ -84,7 +98,7 @@ exports.formatOrderIntoTransaction = async (order, store) => {
           // The customer TP Badge ID
           BadgeID: customerDetails ? customerDetails.name : "not-available",
           // The items themselves
-          ...lineItems.menuTPItems
+          ...lineItems.menuTPItems,
         }
       );
     } catch (err) {
@@ -92,9 +106,10 @@ exports.formatOrderIntoTransaction = async (order, store) => {
     }
   }
 
-  // lineItems.reservationItems
-  // If lineItems.reservationItems contains objects,
-  // then publish them to the Reservations spreadsheet.
+  /* * lineItems.reservationItems
+   * If lineItems.reservationItems contains objects,
+   * then publish them to the Reservations spreadsheet.
+   */
   if (!_.isEmpty(lineItems.reservationItems)) {
     // Send items to the Reservations spreadsheet
     try {
@@ -119,7 +134,7 @@ exports.formatOrderIntoTransaction = async (order, store) => {
             .add(1, "day")
             .format("[=DATE(]YYYY[,]MM[,]DD[)]"),
           // The items themselves
-          ...lineItems.reservationItems
+          ...lineItems.reservationItems,
         }
       );
     } catch (err) {
@@ -127,9 +142,21 @@ exports.formatOrderIntoTransaction = async (order, store) => {
     }
   }
 
-  // lineItems.invoicedItems.lenght
-  // Only create a transaction if the order contains items to be invoiced.
-  // Otherwise the process module throws an error because it can't accept empty transactions.
+  /* * Prevent skipped-customers from creating invoices.
+   * Only create a transaction if the order contains items to be invoiced.
+   * Otherwise the process module throws an error because it can't accept empty transactions.
+   */
+  for (const sc of config.get("skipped-customers")) {
+    if (customerDetails.fiscal_id == sc.fiscal_id) {
+      logger.info("Customer skipped: " + sc.name + "(" + sc.fiscal_id + ")");
+      return;
+    }
+  }
+
+  /* * lineItems.invoicedItems.lenght
+   * Only create a transaction if the order contains items to be invoiced.
+   * Otherwise the process module throws an error because it can't accept empty transactions.
+   */
   if (lineItems.invoicedItems.length) {
     // Initiate a new instance of Transaction
     // and format order details according to object model
@@ -145,13 +172,13 @@ exports.formatOrderIntoTransaction = async (order, store) => {
       // The moment in time the order was paid
       closed_at: order.closed_at,
       // Get order payment methods
-      payment_methods: getOrderPaymentMethods(order.tenders),
+      payment_methods: paymentMethods,
       // Format order items
       line_items: lineItems.invoicedItems,
       // Check if order has associated customer details
       customer: customerDetails,
       // Check if document is to be printed or not
-      should_print: lineItems.printFlag
+      should_print: lineItems.printFlag,
     })
       // Save the transaction to the database
       .save();
@@ -163,7 +190,7 @@ exports.formatOrderIntoTransaction = async (order, store) => {
 /* and Square defines an array of tenders for this purpose. */
 /* This function extracts the tenders[i].type from each order object */
 /* simplifying it into an array of payment methods. */
-const getOrderPaymentMethods = tenders => {
+const getOrderPaymentMethods = (tenders) => {
   // Initiate temporary storage array
   const paymentMethods = [];
   // For each tender
@@ -198,7 +225,7 @@ const getOrderPaymentMethods = tenders => {
 /* * according to the Portuguese Legislation, */
 /* * and since the Square API defines an array of "taxes" */
 /* * possible for each line item, only the array's first value will be used. */
-const getOrderItems = lineItems => {
+const getOrderItems = (lineItems) => {
   // Initiate temporary Print flag
   let printFlag = false;
   // Initiate temporary MenuTP items object
@@ -276,7 +303,7 @@ const getOrderItems = lineItems => {
         // If line item has valid taxes array, only get it's first value.
         getTaxTier(
           item.taxes && item.taxes.length ? item.taxes[0].percentage : ""
-        )
+        ),
     });
   }
   // Return formated items array to the caller,
@@ -287,7 +314,7 @@ const getOrderItems = lineItems => {
 /* * */
 /* Returns the tax_id based on respective tax percentage. */
 /* Default value is a global setting. */
-const getTaxTier = taxPercentage => {
+const getTaxTier = (taxPercentage) => {
   switch (taxPercentage) {
     case "6":
       return "RED";
@@ -312,7 +339,7 @@ const getTaxTier = taxPercentage => {
 /* * defines an array of "tenders" possible for each transaction, */
 /* * the program will iterate through the array */
 /* * and use the first found value. */
-const getOrderCustomer = async tenders => {
+const getOrderCustomer = async (tenders) => {
   // For each tender
   for (const tender of tenders) {
     // find the first available customer_id
@@ -322,13 +349,13 @@ const getOrderCustomer = async tenders => {
       const params = {
         method: "GET",
         url: squareAPI.setAPIEndpoint("customers/" + tender.customer_id),
-        headers: squareAPI.setRequestHeaders()
+        headers: squareAPI.setRequestHeaders(),
       };
 
       // Return result to the caller
       return await squareAPI
         .requestSquareAPI(params, "customer")
-        .then(customer => {
+        .then((customer) => {
           // Return the formated info to the caller
           return {
             fiscal_id:
@@ -342,10 +369,10 @@ const getOrderCustomer = async tenders => {
               (customer.family_name ? " " + customer.family_name : ""),
             email:
               // Check if email is present, since it is not mandatory
-              customer.email_address ? customer.email_address : ""
+              customer.email_address ? customer.email_address : "",
           };
         })
-        .catch(error => {
+        .catch((error) => {
           return logger.error(
             "syncAPI.getOrderCustomer()",
             "An error occured while getting customer details.",

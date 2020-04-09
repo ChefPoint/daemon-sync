@@ -63,5 +63,9 @@
         "reference": "W3SKSOZCB2EPP5WLXOCKINWA"
       }
     ]
-  }
+  },
+  "skipped-customers": [
+    { "fiscal_id": "233144455", "name": "João" },
+    { "fiscal_id": "123456789", "name": "Teleperformance Portugal" }
+  ]
 }
