@@ -147,8 +147,11 @@ exports.formatOrderIntoTransaction = async (order, store) => {
    * Otherwise the process module throws an error because it can't accept empty transactions.
    */
   for (const sc of config.get("skipped-customers")) {
-    if (customerDetails.fiscal_id == sc.fiscal_id) {
-      logger.info("Customer skipped: " + sc.name + "(" + sc.fiscal_id + ")");
+    if (
+      customerDetails.hasOwnProperty("fiscal_id") &&
+      customerDetails.fiscal_id == sc.fiscal_id
+    ) {
+      logger.info("> Customer skipped: " + sc.name + " (" + sc.fiscal_id + ")");
       return;
     }
   }
