@@ -1,14 +1,14 @@
 {
   "name": "chefpoint-daemon-sync",
   "version": "2.0.0",
-  "description": "CHEF POINT Daemon - Sync, built on Node.js and MongoDB",
+  "description": "CHEF POINT Daemon - Sync, built on Node.js and MongoDB.",
   "main": "index.js",
   "scripts": {
     "test": "jest --watch-all --verbose",
     "start": "node index.js"
   },
   "engines": {
-    "node": "10.15.3"
+    "node": "12.18.3"
   },
   "repository": {
     "type": "git",
@@ -22,16 +22,15 @@
   "homepage": "https://github.com/chefpoint/daemon-sync#readme",
   "dependencies": {
     "config": "^3.3.1",
-    "google-spreadsheet": "^3.0.11",
-    "lodash": "^4.17.19",
+    "google-spreadsheet": "^3.0.13",
+    "lodash": "^4.17.20",
     "moment": "^2.27.0",
-    "mongoose": "^5.9.25",
-    "nodemon": "^2.0.4",
-    "npm": "^6.14.7",
+    "mongoose": "^5.10.3",
+    "npm": "^6.14.8",
     "request": "^2.88.2",
     "winston": "^3.3.3"
   },
   "devDependencies": {
-    "jest": "^26.1.0"
+    "jest": "^26.4.2"
   }
 }
