@@ -29,23 +29,11 @@ exports.getOrdersFromSquare = async (squareLocationID, lastSyncTime) => {
     responseType: "json",
   };
 
+  // Perform the request to the Square API
+  // and return response to the caller
   return got(params)
     .then(({ body }) => {
       return body.orders;
-    })
-    .catch((error) => {
-      logger("syncAPI.getOrdersFromSquare()");
-      logger("An error occured while getting orders from Square.");
-      logger(error);
-      return [];
-    });
-
-  // Perform the request to the Square API
-  // and return response to the caller
-  return await squareAPI
-    .requestSquareAPI(params, "orders")
-    .then((orders) => {
-      return orders;
     })
     .catch((error) => {
       logger("syncAPI.getOrdersFromSquare()");
@@ -363,38 +351,12 @@ const getOrderCustomer = async (tenders) => {
         responseType: "json",
       };
 
+      // Return result to the caller
       return got(params)
         .then(({ body }) => {
           // Return the formated info to the caller
           const customer = body.customer;
 
-          // Return the formated info to the caller
-          return {
-            fiscal_id:
-              // Remove white spaces
-              customer.reference_id
-                ? customer.reference_id.replace(/\s+/g, "")
-                : null,
-            name:
-              // Check if name is present, since it is not mandatory
-              (customer.given_name ? customer.given_name : "") +
-              (customer.family_name ? " " + customer.family_name : ""),
-            email:
-              // Check if email is present, since it is not mandatory
-              customer.email_address ? customer.email_address : "",
-          };
-        })
-        .catch((error) => {
-          logger("syncAPI.getOrderCustomer()");
-          logger("An error occured while getting customer details.");
-          logger(error);
-          return {};
-        });
-
-      // Return result to the caller
-      return await squareAPI
-        .requestSquareAPI(params, "customer")
-        .then((customer) => {
           // Return the formated info to the caller
           return {
             fiscal_id:
