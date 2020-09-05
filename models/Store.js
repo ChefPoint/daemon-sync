@@ -1,5 +1,5 @@
-/* * */
-/* * */
+"use strict";
+
 /* * * * * */
 /* STORE */
 /* * */
@@ -10,33 +10,33 @@ const mongoose = require("mongoose");
 
 /* * */
 /* Schema for MongoDB ["Store"] Object */
-exports.Store = mongoose.model(
+module.exports = mongoose.model(
   "Store",
   new mongoose.Schema({
     name: {
       type: String,
       maxlength: 30,
-      required: true
+      required: true,
     },
     shortName: {
       type: String,
       maxlength: 30,
-      required: true
+      required: true,
     },
     squareLocationID: {
       type: String,
       maxlength: 30,
-      required: true
+      required: true,
     },
     vendusRegisterID: {
       type: String,
       maxlength: 30,
-      required: true
+      required: true,
     },
     lastSyncTime: {
       type: String,
       maxlength: 30,
-      required: true
-    }
+      required: true,
+    },
   })
 );

@@ -1,3 +1,9 @@
+"use strict";
+
+/* * * * * */
+/* SPREADSHEET API */
+/* * */
+
 /* * */
 /* IMPORTS */
 const config = require("config");
@@ -9,8 +15,8 @@ exports.addNewRow = async (documentID, sheetID, row) => {
   // -------------------
   const doc = new GoogleSpreadsheet(documentID);
   await doc.useServiceAccountAuth({
-    client_email: config.get("auth.google-service-account-email"),
-    private_key: config.get("auth.google-service-account-private-key")
+    client_email: config.get("secrets.google-service-account-email"),
+    private_key: config.get("secrets.google-service-account-private-key"),
   });
   await doc.loadInfo();
   const sheet = doc.sheetsById[sheetID];
