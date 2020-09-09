@@ -1,12 +1,9 @@
 {
-  "title": "CHEF POINT Daemon - Sync (Dev)",
-  "database": {
-    "connection-string": "mongodb://localhost/chefpoint-connect"
-  },
-  "auth": {
-    "squareAPI": "env-var",
-    "google-service-account-email": "env-var",
-    "google-service-account-private-key": "env-var"
+  "secrets": {
+    "square-auth-token": "envar",
+    "database-connection-string": "mongodb://localhost/chefpoint-connect",
+    "google-service-account-email": "envar",
+    "google-service-account-private-key": "envar"
   },
   "general": {
     "default-tax-id": "INT",

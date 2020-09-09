@@ -1,13 +1,11 @@
-/* * */
-/* * */
+"use strict";
+
 /* * * * * */
-/* RETRIEVE TRANSACTIONS FROM SQUARE */
-/* AND SAVE THEM TO TRANSACTIONS QUEUE */
+/* SQUARE API */
 /* * */
 
 /* * */
 /* IMPORTS */
-const request = require("request");
 const config = require("config");
 
 /* * */
@@ -16,7 +14,7 @@ const config = require("config");
 
 /* * */
 /* Where and which service to call the Square API. */
-exports.setAPIEndpoint = service => {
+exports.setAPIEndpoint = (service) => {
   return "https://connect.squareup.com/v2/" + service;
 };
 
@@ -26,7 +24,7 @@ exports.setRequestHeaders = () => {
   return {
     "Content-Type": "application/json",
     "Square-Version": "2019-12-17",
-    Authorization: "Bearer " + config.get("auth.squareAPI")
+    Authorization: "Bearer " + config.get("secrets.square-auth-token"),
   };
 };
 
@@ -41,36 +39,17 @@ exports.setRequestBody = (squareLocationID, lastSyncTime) => {
         date_time_filter: {
           closed_at: {
             start_at: lastSyncTime,
-            end_at: new Date()
-          }
+            end_at: new Date(),
+          },
         },
         state_filter: {
-          states: ["COMPLETED"]
-        }
+          states: ["COMPLETED"],
+        },
       },
       sort: {
         sort_field: "CLOSED_AT",
-        sort_order: "ASC"
-      }
-    }
-  });
-};
-
-/* * */
-/* Request the Square API for the specified params. */
-exports.requestSquareAPI = (params, objectToExtract) => {
-  // This method returns a Promise to it's caller,
-  // which is only resolved after the correct response from the API.
-  return new Promise((resolve, reject) => {
-    // Perform the request
-    request(params, async (err, res, body) => {
-      // Reject if a connection error occurs
-      if (err) reject(err);
-      // Reject if there is an error with invoice creation
-      else if (res.statusCode >= 400 && res.statusCode <= 500)
-        reject(JSON.parse(body).errors);
-      // Resolve promise with request result
-      else resolve(JSON.parse(body)[objectToExtract]);
-    });
+        sort_order: "ASC",
+      },
+    },
   });
 };

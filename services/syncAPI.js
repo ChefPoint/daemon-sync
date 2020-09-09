@@ -1,8 +1,7 @@
-/* * */
-/* * */
+"use strict";
+
 /* * * * * */
 /* SYNC API */
-/* * */
 /* * */
 
 /* * */
@@ -10,10 +9,11 @@
 const _ = require("lodash");
 const config = require("config");
 const logger = require("./logger");
+const got = require("got");
 const moment = require("moment");
 const squareAPI = require("../services/squareAPI");
 const spreadsheetAPI = require("../services/spreadsheetAPI");
-const { Transaction } = require("../models/Transaction");
+const Transaction = require("../models/Transaction");
 
 /* * */
 /* This function requests the Square API for new orders. */
@@ -26,22 +26,20 @@ exports.getOrdersFromSquare = async (squareLocationID, lastSyncTime) => {
     url: squareAPI.setAPIEndpoint("orders/search"),
     headers: squareAPI.setRequestHeaders(),
     body: squareAPI.setRequestBody(squareLocationID, lastSyncTime),
+    responseType: "json",
   };
 
   // Perform the request to the Square API
   // and return response to the caller
-  return await squareAPI
-    .requestSquareAPI(params, "orders")
-    .then((orders) => {
-      return orders;
+  return got(params)
+    .then(({ body }) => {
+      return body.orders;
     })
     .catch((error) => {
-      return logger.error(
-        "syncAPI.getOrdersFromSquare()",
-        "An error occured while getting orders from Square.",
-        error,
-        []
-      );
+      logger("syncAPI.getOrdersFromSquare()");
+      logger("An error occured while getting orders from Square.");
+      logger(error);
+      return [];
     });
 };
 
@@ -148,7 +146,7 @@ exports.formatOrderIntoTransaction = async (order, store) => {
    */
   for (const sc of config.get("skipped-customers")) {
     if (customerDetails && customerDetails.fiscal_id == sc.fiscal_id) {
-      logger.info("> Customer skipped: " + sc.name + " (" + sc.fiscal_id + ")");
+      logger("> Customer skipped: " + sc.name + " (" + sc.fiscal_id + ")");
       return;
     }
   }
@@ -350,12 +348,15 @@ const getOrderCustomer = async (tenders) => {
         method: "GET",
         url: squareAPI.setAPIEndpoint("customers/" + tender.customer_id),
         headers: squareAPI.setRequestHeaders(),
+        responseType: "json",
       };
 
       // Return result to the caller
-      return await squareAPI
-        .requestSquareAPI(params, "customer")
-        .then((customer) => {
+      return got(params)
+        .then(({ body }) => {
+          // Return the formated info to the caller
+          const customer = body.customer;
+
           // Return the formated info to the caller
           return {
             fiscal_id:
@@ -373,12 +374,10 @@ const getOrderCustomer = async (tenders) => {
           };
         })
         .catch((error) => {
-          return logger.error(
-            "syncAPI.getOrderCustomer()",
-            "An error occured while getting customer details.",
-            error,
-            {}
-          );
+          logger("syncAPI.getOrderCustomer()");
+          logger("An error occured while getting customer details.");
+          logger(error);
+          return {};
         });
     }
   }
