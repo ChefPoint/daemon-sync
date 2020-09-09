@@ -66,15 +66,21 @@ const syncStoreTransactions = async (store) => {
 
   // If response is not empty:
   // For each order,
-  for (const order of orders) {
+  for (const [index, order] of orders.entries()) {
+    // Clear console output
+    process.stdout.write("                                        \r");
+
     // Check the validity of the order
     // 1) If a sale has no items:
     if (typeof order.line_items == "undefined") {
       logger("Invalid order.");
       logger("Order has no items.");
-      logger(order);
+      logger("Order ID: " + order.id);
       continue;
     }
+
+    process.stdout.write("Syncing order " + index + " of " + orders.length);
+    process.stdout.write(" [" + order.id + "]\r");
 
     // Format and save it to the database
     await syncAPI.formatOrderIntoTransaction(order, store);
@@ -92,8 +98,9 @@ const syncStoreTransactions = async (store) => {
   }
 
   // Log successful operation.
-  logger("Done. " + orders.length + " orders synced.");
-  logger("Latest transaction was at " + store.lastSyncTime);
+  process.stdout.write("Done. " + orders.length + " orders synced.");
+  process.stdout.write("                                        \n");
+  logger("Last transaction was at " + store.lastSyncTime);
 };
 
 /* * */
