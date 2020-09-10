@@ -32,7 +32,9 @@ const Store = require("./models/Store");
   // For each store, sync it's transactions
   for (const store of stores) {
     logger();
-    logger("----------------------------------------");
+    logger(
+      "------------------------------------------------------------------------------------------------------------------------"
+    );
     logger("Syncing [" + store.name + "]...");
     await syncStoreTransactions(store);
     logger("----------------------------------------");
