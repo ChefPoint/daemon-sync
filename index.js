@@ -19,6 +19,10 @@ const Store = require("./models/Store");
   // Store start time for logging purposes
   const startTime = process.hrtime();
 
+  logger("****************************************");
+  logger(new Date().toISOString());
+  logger("****************************************");
+
   logger("Starting...");
   await database.connect();
 
@@ -28,20 +32,20 @@ const Store = require("./models/Store");
   // For each store, sync it's transactions
   for (const store of stores) {
     logger();
-    logger("-----------------------------------------");
+    logger("----------------------------------------");
     logger("Syncing [" + store.name + "]...");
     await syncStoreTransactions(store);
-    logger("-----------------------------------------");
+    logger("----------------------------------------");
   }
 
   logger();
-  logger("- - - - - - - - - - - - - - - - - - - - -");
+  logger("- - - - - - - - - - - - - - - - - - - -");
   logger("Shutting down...");
 
   await database.disconnect();
 
   logger("Operation took " + getDuration(startTime) / 1000 + " seconds.");
-  logger("- - - - - - - - - - - - - - - - - - - - -");
+  logger("- - - - - - - - - - - - - - - - - - - -");
   logger();
 })();
 
