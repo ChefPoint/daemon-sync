@@ -16,7 +16,9 @@ exports.addNewRow = async (documentID, sheetID, row) => {
   const doc = new GoogleSpreadsheet(documentID);
   await doc.useServiceAccountAuth({
     client_email: config.get("secrets.google-service-account-email"),
-    private_key: config.get("secrets.google-service-account-private-key"),
+    private_key: config
+      .get("secrets.google-service-account-private-key")
+      .replace(/\\n/g, "\n"), // Fix for newline in Balena Dashboard Environment Variables
   });
   await doc.loadInfo();
   const sheet = doc.sheetsById[sheetID];
