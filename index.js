@@ -105,9 +105,12 @@ const syncStoreTransactions = async (store) => {
       .save();
   }
 
+  // Clean verbose loggin artifacts
+  if (config.get("general.verbose-logging")) {
+    process.stdout.write("                                               \n");
+  }
+
   // Log successful operation.
-  if (config.get("general.verbose-logging"))
-    process.stdout.write("                                                 \n");
   logger("Done. " + orders.length + " orders synced.");
   logger("Last transaction was at " + store.lastSyncTime);
 };
