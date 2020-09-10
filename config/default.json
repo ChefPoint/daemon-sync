@@ -7,7 +7,8 @@
   },
   "general": {
     "default-tax-id": "INT",
-    "print-item-id": "HCZZFNCELJBPG4ISBCT7DZXS"
+    "print-item-id": "HCZZFNCELJBPG4ISBCT7DZXS",
+    "verbose-logging": false
   },
   "menuTP": {
     "document-id": "1S7_KDr9jhVMhnjew9AmnDf1k2VJeszloJDjAjqe22gs",

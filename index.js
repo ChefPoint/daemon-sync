@@ -85,8 +85,10 @@ const syncStoreTransactions = async (store) => {
       continue;
     }
 
-    process.stdout.write("Syncing order " + index + " of " + orders.length);
-    process.stdout.write(" [" + order.id + "]\r");
+    if (config.get("general.verbose-logging")) {
+      process.stdout.write("Syncing order " + index + " of " + orders.length);
+      process.stdout.write(" [" + order.id + "]\r");
+    }
 
     // Format and save it to the database
     await syncAPI.formatOrderIntoTransaction(order, store);
@@ -104,8 +106,9 @@ const syncStoreTransactions = async (store) => {
   }
 
   // Log successful operation.
-  process.stdout.write("Done. " + orders.length + " orders synced.");
-  process.stdout.write("                                        \n");
+  if (config.get("general.verbose-logging"))
+    process.stdout.write("                                                 \n");
+  logger("Done. " + orders.length + " orders synced.");
   logger("Last transaction was at " + store.lastSyncTime);
 };
 
