@@ -6,6 +6,7 @@
 
 /* * */
 /* IMPORTS */
+const config = require("config");
 const database = require("./services/database");
 const logger = require("./services/logger");
 const syncAPI = require("./services/syncAPI");
