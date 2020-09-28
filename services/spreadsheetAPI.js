@@ -13,6 +13,7 @@ exports.addNewRow = async (documentID, sheetID, row) => {
   // console.log("Waiting...");
   // await new Promise(resolve => setTimeout(resolve, 1000));
   // -------------------
+  return;
   const doc = new GoogleSpreadsheet(documentID);
   await doc.useServiceAccountAuth({
     client_email: config.get("secrets.google-service-account-email"),
