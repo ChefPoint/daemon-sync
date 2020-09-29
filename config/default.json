@@ -1,7 +1,7 @@
 {
   "secrets": {
     "square-auth-token": "envar",
-    "database-connection-string": "mongodb://localhost/chefpoint-connect",
+    "database-connection-string": "envar",
     "google-service-account-email": "envar",
     "google-service-account-private-key": "envar"
   },
