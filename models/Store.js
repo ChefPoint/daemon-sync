@@ -28,11 +28,6 @@ module.exports = mongoose.model(
       maxlength: 30,
       required: true,
     },
-    vendusRegisterID: {
-      type: String,
-      maxlength: 30,
-      required: true,
-    },
     lastSyncTime: {
       type: String,
       maxlength: 30,

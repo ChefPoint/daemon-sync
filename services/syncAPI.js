@@ -165,8 +165,6 @@ exports.formatOrderIntoTransaction = async (order, store) => {
       locationShortName: store.shortName,
       // Location squareLocationID is the same for debugging purposes
       squareLocationID: order.location_id,
-      // Location vendusRegisterID for dameon-proccess independence
-      vendusRegisterID: store.vendusRegisterID,
       // The moment in time the order was paid
       closed_at: order.closed_at,
       // Get order payment methods
