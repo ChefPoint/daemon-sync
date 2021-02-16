@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /* * * * * */
 /* STORE */
@@ -6,12 +6,12 @@
 
 /* * */
 /* IMPORTS */
-const mongoose = require("mongoose");
+const mongoose = require('mongoose');
 
 /* * */
 /* Schema for MongoDB ["Store"] Object */
 module.exports = mongoose.model(
-  "Store",
+  'Store',
   new mongoose.Schema({
     name: {
       type: String,

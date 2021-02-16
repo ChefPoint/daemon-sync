@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /* * * * * */
 /* SYNC API */
@@ -6,14 +6,14 @@
 
 /* * */
 /* IMPORTS */
-const _ = require("lodash");
-const config = require("config");
-const logger = require("./logger");
-const got = require("got");
-const moment = require("moment");
-const squareAPI = require("../services/squareAPI");
-const spreadsheetAPI = require("../services/spreadsheetAPI");
-const Transaction = require("../models/Transaction");
+const _ = require('lodash');
+const config = require('config');
+const logger = require('./logger');
+const got = require('got');
+const moment = require('moment');
+const squareAPI = require('../services/squareAPI');
+const spreadsheetAPI = require('../services/spreadsheetAPI');
+const Transaction = require('../models/Transaction');
 
 /* * */
 /* This function requests the Square API for new orders. */
@@ -22,11 +22,11 @@ const Transaction = require("../models/Transaction");
 exports.getOrdersFromSquare = async (squareLocationID, lastSyncTime) => {
   // Set request parameters
   const params = {
-    method: "POST",
-    url: squareAPI.setAPIEndpoint("orders/search"),
+    method: 'POST',
+    url: squareAPI.setAPIEndpoint('orders/search'),
     headers: squareAPI.setRequestHeaders(),
     body: squareAPI.setRequestBody(squareLocationID, lastSyncTime),
-    responseType: "json",
+    responseType: 'json',
   };
 
   // Perform the request to the Square API
@@ -36,8 +36,8 @@ exports.getOrdersFromSquare = async (squareLocationID, lastSyncTime) => {
       return body.orders;
     })
     .catch((error) => {
-      logger("syncAPI.getOrdersFromSquare()");
-      logger("An error occured while getting orders from Square.");
+      logger('syncAPI.getOrdersFromSquare()');
+      logger('An error occured while getting orders from Square.');
       logger(error);
       return [];
     });
@@ -84,17 +84,17 @@ exports.formatOrderIntoTransaction = async (order, store) => {
     // Send items to the MenuTP spreadsheet
     try {
       await spreadsheetAPI.addNewRow(
-        config.get("menuTP.document-id"),
-        config.get("menuTP.sheet-id"),
+        config.get('menuTP.document-id'),
+        config.get('menuTP.sheet-id'),
         {
           // The shop location
           Location: store.shortName,
           // The transaction date formated so GSheets understands
-          Date: moment(order.closed_at).format("[=DATE(]YYYY[,]MM[,]DD[)]"),
+          Date: moment(order.closed_at).format('[=DATE(]YYYY[,]MM[,]DD[)]'),
           // The transaction time formated so GSheets understands
-          Time: moment(order.closed_at).format("[=TIME(]HH[,]mm[,0)]"),
+          Time: moment(order.closed_at).format('[=TIME(]HH[,]mm[,0)]'),
           // The customer TP Badge ID
-          BadgeID: customerDetails ? customerDetails.name : "not-available",
+          BadgeID: customerDetails ? customerDetails.name : 'not-available',
           // The items themselves
           ...lineItems.menuTPItems,
         }
@@ -112,8 +112,8 @@ exports.formatOrderIntoTransaction = async (order, store) => {
     // Send items to the Reservations spreadsheet
     try {
       await spreadsheetAPI.addNewRow(
-        config.get("reservations.document-id"),
-        config.get("reservations.sheet-id"),
+        config.get('reservations.document-id'),
+        config.get('reservations.sheet-id'),
         {
           // The order ID
           orderID: order.id,
@@ -122,15 +122,15 @@ exports.formatOrderIntoTransaction = async (order, store) => {
           // The customer TP Badge ID
           customerName: customerDetails
             ? customerDetails.name
-            : "not-available",
+            : 'not-available',
           // The reservation (transaction) date formated so GSheets understands
           reservationDate: moment(order.closed_at).format(
-            "[=DATE(]YYYY[,]MM[,]DD[)]"
+            '[=DATE(]YYYY[,]MM[,]DD[)]'
           ),
           // The pickup date formated so GSheets understands
           pickupDate: moment(order.closed_at)
-            .add(1, "day")
-            .format("[=DATE(]YYYY[,]MM[,]DD[)]"),
+            .add(1, 'day')
+            .format('[=DATE(]YYYY[,]MM[,]DD[)]'),
           // The items themselves
           ...lineItems.reservationItems,
         }
@@ -144,9 +144,9 @@ exports.formatOrderIntoTransaction = async (order, store) => {
    * Only create a transaction if the order contains items to be invoiced.
    * Otherwise the process module throws an error because it can't accept empty transactions.
    */
-  for (const sc of config.get("skipped-customers")) {
+  for (const sc of config.get('skipped-customers')) {
     if (customerDetails && customerDetails.fiscal_id == sc.fiscal_id) {
-      logger("> Customer skipped: " + sc.name + " (" + sc.fiscal_id + ")");
+      logger('> Customer skipped: ' + sc.name + ' (' + sc.fiscal_id + ')');
       return;
     }
   }
@@ -239,7 +239,7 @@ const getOrderItems = (lineItems) => {
 
     // A.
     // Check if it is a print instruction
-    if (item.catalog_object_id === config.get("general.print-item-id")) {
+    if (item.catalog_object_id === config.get('general.print-item-id')) {
       // If it is, set the flag
       printFlag = true;
       // and skip item creation
@@ -248,7 +248,7 @@ const getOrderItems = (lineItems) => {
 
     // B.
     // Check if it is a special MenuTP item
-    for (const tp of config.get("menuTP.items")) {
+    for (const tp of config.get('menuTP.items')) {
       if (item.catalog_object_id === tp.reference) {
         // If it is, set its key and quantity
         if (menuTPItems[tp.key]) menuTPItems[tp.key] += Number(item.quantity);
@@ -261,7 +261,7 @@ const getOrderItems = (lineItems) => {
 
     // C.
     // Check if it is a reservation
-    for (const rv of config.get("reservations.items")) {
+    for (const rv of config.get('reservations.items')) {
       if (item.catalog_object_id === rv.reference) {
         // If it is, set its key and quantity
         if (reservationItems[rv.key])
@@ -282,13 +282,13 @@ const getOrderItems = (lineItems) => {
     invoicedItems.push({
       reference:
         // Reference for debugging purposes
-        item.catalog_object_id || "none-available",
+        item.catalog_object_id || 'none-available',
       title:
         // Item title is constructed out of it's name and it's variation name
         item.name +
         // Square appends "Regular" to simple items without variation,
         // so that is removed here if "Regular" is found.
-        (item.variation_name != "Regular" ? " " + item.variation_name : ""),
+        (item.variation_name != 'Regular' ? ' ' + item.variation_name : ''),
       qty:
         // Item quantity
         item.quantity,
@@ -298,7 +298,7 @@ const getOrderItems = (lineItems) => {
       tax_id:
         // If line item has valid taxes array, only get it's first value.
         getTaxTier(
-          item.taxes && item.taxes.length ? item.taxes[0].percentage : ""
+          item.taxes && item.taxes.length ? item.taxes[0].percentage : ''
         ),
     });
   }
@@ -312,15 +312,15 @@ const getOrderItems = (lineItems) => {
 /* Default value is a global setting. */
 const getTaxTier = (taxPercentage) => {
   switch (taxPercentage) {
-    case "6":
-      return "RED";
-    case "13":
-      return "INT";
-    case "23":
-      return "NOR";
+    case '6':
+      return 'RED';
+    case '13':
+      return 'INT';
+    case '23':
+      return 'NOR';
 
     default:
-      return config.get("general.default-tax-id");
+      return config.get('general.default-tax-id');
   }
 };
 
@@ -343,10 +343,10 @@ const getOrderCustomer = async (tenders) => {
       // and request Square API for it's details
       // Set request params
       const params = {
-        method: "GET",
-        url: squareAPI.setAPIEndpoint("customers/" + tender.customer_id),
+        method: 'GET',
+        url: squareAPI.setAPIEndpoint('customers/' + tender.customer_id),
         headers: squareAPI.setRequestHeaders(),
-        responseType: "json",
+        responseType: 'json',
       };
 
       // Return result to the caller
@@ -360,20 +360,20 @@ const getOrderCustomer = async (tenders) => {
             fiscal_id:
               // Remove white spaces
               customer.reference_id
-                ? customer.reference_id.replace(/\s+/g, "")
+                ? customer.reference_id.replace(/\s+/g, '')
                 : null,
             name:
               // Check if name is present, since it is not mandatory
-              (customer.given_name ? customer.given_name : "") +
-              (customer.family_name ? " " + customer.family_name : ""),
+              (customer.given_name ? customer.given_name : '') +
+              (customer.family_name ? ' ' + customer.family_name : ''),
             email:
               // Check if email is present, since it is not mandatory
-              customer.email_address ? customer.email_address : "",
+              customer.email_address ? customer.email_address : '',
           };
         })
         .catch((error) => {
-          logger("syncAPI.getOrderCustomer()");
-          logger("An error occured while getting customer details.");
+          logger('syncAPI.getOrderCustomer()');
+          logger('An error occured while getting customer details.');
           logger(error);
           return {};
         });

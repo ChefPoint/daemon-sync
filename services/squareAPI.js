@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /* * * * * */
 /* SQUARE API */
@@ -6,7 +6,7 @@
 
 /* * */
 /* IMPORTS */
-const config = require("config");
+const config = require('config');
 
 /* * */
 /* Prepare the request parameters */
@@ -15,16 +15,16 @@ const config = require("config");
 /* * */
 /* Where and which service to call the Square API. */
 exports.setAPIEndpoint = (service) => {
-  return "https://connect.squareup.com/v2/" + service;
+  return 'https://connect.squareup.com/v2/' + service;
 };
 
 /* * */
 /* Set headers with Application Type, API Version and Authorization details. */
 exports.setRequestHeaders = () => {
   return {
-    "Content-Type": "application/json",
-    "Square-Version": "2019-12-17",
-    Authorization: "Bearer " + config.get("secrets.square-auth-token"),
+    'Content-Type': 'application/json',
+    'Square-Version': '2019-12-17',
+    Authorization: 'Bearer ' + config.get('secrets.square-auth-token'),
   };
 };
 
@@ -43,12 +43,12 @@ exports.setRequestBody = (squareLocationID, lastSyncTime) => {
           },
         },
         state_filter: {
-          states: ["COMPLETED"],
+          states: ['COMPLETED'],
         },
       },
       sort: {
-        sort_field: "CLOSED_AT",
-        sort_order: "ASC",
+        sort_field: 'CLOSED_AT',
+        sort_order: 'ASC',
       },
     },
   });

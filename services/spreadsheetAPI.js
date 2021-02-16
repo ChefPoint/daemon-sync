@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /* * * * * */
 /* SPREADSHEET API */
@@ -6,8 +6,8 @@
 
 /* * */
 /* IMPORTS */
-const config = require("config");
-const { GoogleSpreadsheet } = require("google-spreadsheet");
+const config = require('config');
+const { GoogleSpreadsheet } = require('google-spreadsheet');
 
 exports.addNewRow = async (documentID, sheetID, row) => {
   // console.log("Waiting...");
@@ -16,10 +16,10 @@ exports.addNewRow = async (documentID, sheetID, row) => {
   return;
   const doc = new GoogleSpreadsheet(documentID);
   await doc.useServiceAccountAuth({
-    client_email: config.get("secrets.google-service-account-email"),
+    client_email: config.get('secrets.google-service-account-email'),
     private_key: config
-      .get("secrets.google-service-account-private-key")
-      .replace(/\\n/g, "\n"), // Fix for newline in Balena Dashboard Environment Variables
+      .get('secrets.google-service-account-private-key')
+      .replace(/\\n/g, '\n'), // Fix for newline in Balena Dashboard Environment Variables
   });
   await doc.loadInfo();
   const sheet = doc.sheetsById[sheetID];
