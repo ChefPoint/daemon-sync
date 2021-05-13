@@ -1,4 +1,4 @@
-"use strict";
+'use strict';
 
 /* * * * * */
 /* CHEF POINT - DAEMON SYNC */
@@ -6,11 +6,11 @@
 
 /* * */
 /* IMPORTS */
-const config = require("config");
-const database = require("./services/database");
-const logger = require("./services/logger");
-const syncAPI = require("./services/syncAPI");
-const Store = require("./models/Store");
+const config = require('config');
+const database = require('./services/database');
+const logger = require('./services/logger');
+const syncAPI = require('./services/syncAPI');
+const Store = require('./models/Store');
 
 /* * */
 /* At program initiation all stores are retrieved from the database */
@@ -20,13 +20,13 @@ const Store = require("./models/Store");
   // Store start time for logging purposes
   const startTime = process.hrtime();
 
-  logger("****************************************");
+  logger('****************************************');
   logger(new Date().toISOString());
-  logger("****************************************");
+  logger('****************************************');
 
   logger();
 
-  logger("Starting...");
+  logger('Starting...');
   await database.connect();
 
   // Get all store locations from the database
@@ -35,20 +35,20 @@ const Store = require("./models/Store");
   // For each store, sync it's transactions
   for (const store of stores) {
     logger();
-    logger("----------------------------------------");
-    logger("Syncing [" + store.name + "]...");
+    logger('----------------------------------------');
+    logger('Syncing [' + store.name + ']...');
     await syncStoreTransactions(store);
-    logger("----------------------------------------");
+    logger('----------------------------------------');
   }
 
   logger();
-  logger("- - - - - - - - - - - - - - - - - - - -");
-  logger("Shutting down...");
+  logger('- - - - - - - - - - - - - - - - - - - -');
+  logger('Shutting down...');
 
   await database.disconnect();
 
-  logger("Operation took " + getDuration(startTime) / 1000 + " seconds.");
-  logger("- - - - - - - - - - - - - - - - - - - -");
+  logger('Operation took ' + getDuration(startTime) / 1000 + ' seconds.');
+  logger('- - - - - - - - - - - - - - - - - - - -');
   logger();
 })();
 
@@ -62,33 +62,30 @@ const Store = require("./models/Store");
 /* This is what keeps track of which transactions were synced and which were not. */
 const syncStoreTransactions = async (store) => {
   // First, get orders from Square
-  const orders = await syncAPI.getOrdersFromSquare(
-    store.squareLocationID,
-    store.lastSyncTime
-  );
+  const orders = await syncAPI.getOrdersFromSquare(store.squareLocationID, store.lastSyncTime);
 
   // If response is empty, return no new orders to sync
-  if (!orders) return logger("No new orders to sync.");
-  else logger("Syncing " + orders.length + " orders...");
+  if (!orders) return logger('No new orders to sync.');
+  else logger('Syncing ' + orders.length + ' orders...');
 
   // If response is not empty:
   // For each order,
   for (const [index, order] of orders.entries()) {
     // Clear console output
-    process.stdout.write("                                        \r");
+    process.stdout.write('                                        \r');
 
     // Check the validity of the order
     // 1) If a sale has no items:
-    if (typeof order.line_items == "undefined") {
-      logger("Invalid order.");
-      logger("Order has no items.");
-      logger("Order ID: " + order.id);
+    if (typeof order.line_items == 'undefined') {
+      logger('Invalid order.');
+      logger('Order has no items.');
+      logger('Order ID: ' + order.id);
       continue;
     }
 
-    if (config.get("general.verbose-logging")) {
-      process.stdout.write("Syncing order " + index + " of " + orders.length);
-      process.stdout.write(" [" + order.id + "]\r");
+    if (config.get('general.verbose-logging')) {
+      process.stdout.write('Syncing order ' + index + ' of ' + orders.length);
+      process.stdout.write(' [' + order.id + ']\r');
     }
 
     // Format and save it to the database
@@ -98,22 +95,19 @@ const syncStoreTransactions = async (store) => {
     // and update store location with the latest time orders were synced.
     await store
       .set({
-        lastSyncTime: syncAPI.compareSyncDates(
-          order.closed_at,
-          store.lastSyncTime
-        ),
+        lastSyncTime: syncAPI.compareSyncDates(order.closed_at, store.lastSyncTime),
       })
       .save();
   }
 
   // Clean verbose loggin artifacts
-  if (config.get("general.verbose-logging")) {
-    process.stdout.write("                                               \n");
+  if (config.get('general.verbose-logging')) {
+    process.stdout.write('                                               \n');
   }
 
   // Log successful operation.
-  logger("Done. " + orders.length + " orders synced.");
-  logger("Last transaction was at " + store.lastSyncTime);
+  logger('Done. ' + orders.length + ' orders synced.');
+  logger('Last transaction was at ' + store.lastSyncTime);
 };
 
 /* * */
