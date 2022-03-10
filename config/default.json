@@ -64,6 +64,7 @@
   },
   "skipped-customers": [
     { "fiscal_id": "233144455", "name": "João Vasconcelos" },
-    { "fiscal_id": "TP_Novos_Colaboradores", "name": "TP Novos Colaboradores" }
+    { "fiscal_id": "TP_Novos_Colaboradores", "name": "TP Novos Colaboradores" },
+    { "fiscal_id": "TP_Facilities", "name": "TP Facilities" }
   ]
 }
