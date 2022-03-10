@@ -64,6 +64,6 @@
   },
   "skipped-customers": [
     { "fiscal_id": "233144455", "name": "João Vasconcelos" },
-    { "fiscal_id": "503245933", "name": "Teleperformance Portugal" }
+    { "fiscal_id": "TP_Novos_Colaboradores", "name": "TP Novos Colaboradores" }
   ]
 }
